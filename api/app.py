@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 import db
 from config import Settings
 from otp_delivery import DeliveryError, get_delivery_service
+from password_utils import hash_password, verify_password
 
 app = Flask(__name__)
 
@@ -15,17 +16,18 @@ def health():
 @app.post("/api/register")
 def register_user():
     payload = request.get_json(silent=True) or {}
-    required_fields = ["username", "email", "phone_number", "password_hash"]
+    required_fields = ["username", "email", "phone_number", "password"]
     missing = [name for name in required_fields if not payload.get(name)]
     if missing:
         return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
 
     try:
+        password_hash = hash_password(payload["password"])
         result = db.sp_register_user(
             payload["username"],
             payload["email"],
             payload["phone_number"],
-            payload["password_hash"],
+            password_hash,
         )
         return jsonify(result), 200 if result["success"] else 400
     except RuntimeError as exc:
@@ -101,6 +103,34 @@ def record_login_attempt():
     try:
         result = db.sp_record_login_attempt(user_id, ip_address, status, error_message)
         return jsonify(result), 200
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
+@app.post("/api/login/password-verify")
+def verify_login_password():
+    payload = request.get_json(silent=True) or {}
+    login_id = payload.get("login_id")
+    password = payload.get("password")
+
+    if not login_id or not password:
+        return jsonify({"error": "Missing required fields: login_id, password"}), 400
+
+    try:
+        user = db.get_user_by_login_identifier(login_id)
+        if not user:
+            return jsonify({"success": False, "message": "Invalid credentials"}), 401
+
+        if not bool(user["IsActive"]):
+            return jsonify({"success": False, "message": "Account is inactive"}), 403
+
+        if bool(user["IsLocked"]):
+            return jsonify({"success": False, "message": "Account is locked"}), 423
+
+        if not verify_password(password, user["PasswordHash"]):
+            return jsonify({"success": False, "message": "Invalid credentials"}), 401
+
+        return jsonify({"success": True, "user_id": user["UserID"], "message": "Password verified"}), 200
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 500
 

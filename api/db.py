@@ -114,3 +114,27 @@ def get_user_contact(user_id):
     finally:
         cursor.close()
         conn.close()
+
+
+def get_user_by_login_identifier(login_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            (
+                "SELECT UserID, Username, Email, PasswordHash, IsActive, IsLocked, LockUntil "
+                "FROM Users WHERE Username = %s OR Email = %s LIMIT 1"
+            ),
+            (login_id, login_id),
+        )
+        user = cursor.fetchone()
+        if not user:
+            return None
+        user["IsActive"] = _as_bool(user["IsActive"])
+        user["IsLocked"] = _as_bool(user["IsLocked"])
+        return user
+    except Error as exc:
+        raise RuntimeError(str(exc)) from exc
+    finally:
+        cursor.close()
+        conn.close()
