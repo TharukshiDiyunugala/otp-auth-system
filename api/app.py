@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 
 import db
 from config import Settings
+from otp_delivery import DeliveryError, get_delivery_service
 
 app = Flask(__name__)
 
@@ -42,7 +43,29 @@ def generate_otp():
 
     try:
         result = db.sp_generate_otp(user_id, purpose)
-        return jsonify(result), 200 if result["success"] else 400
+        if not result["success"]:
+            return jsonify(result), 400
+
+        delivery_service, contact_field = get_delivery_service(Settings.OTP_DELIVERY_PROVIDER)
+        user_contact = db.get_user_contact(user_id)
+        if not user_contact:
+            return jsonify({"error": "User not found or inactive"}), 404
+
+        destination = user_contact["PhoneNumber"] if contact_field == "phone_number" else user_contact["Email"]
+        if not destination:
+            return jsonify({"error": f"No {contact_field} available for user"}), 400
+
+        delivery_service.send_otp(destination, result["otp_code"], purpose)
+        response = {
+            "success": True,
+            "message": "OTP generated and delivered",
+            "provider": Settings.OTP_DELIVERY_PROVIDER,
+        }
+        if Settings.OTP_INCLUDE_IN_RESPONSE:
+            response["otp_code"] = result["otp_code"]
+        return jsonify(response), 200
+    except DeliveryError as exc:
+        return jsonify({"error": str(exc)}), 502
     except RuntimeError as exc:
         return jsonify({"error": str(exc)}), 500
 

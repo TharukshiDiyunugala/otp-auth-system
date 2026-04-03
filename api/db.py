@@ -98,3 +98,19 @@ def sp_record_login_attempt(user_id, ip_address, status, error_message):
     finally:
         cursor.close()
         conn.close()
+
+
+def get_user_contact(user_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT UserID, Email, PhoneNumber FROM Users WHERE UserID = %s AND IsActive = 1 LIMIT 1",
+            (int(user_id),),
+        )
+        return cursor.fetchone()
+    except Error as exc:
+        raise RuntimeError(str(exc)) from exc
+    finally:
+        cursor.close()
+        conn.close()
