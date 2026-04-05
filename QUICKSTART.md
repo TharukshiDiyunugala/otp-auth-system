@@ -426,8 +426,8 @@ Once the first 3 steps are working:
 1. **Step 4**: Build REST API endpoints (Python/Node/C#/Java)
 2. **Step 5**: Integrate OTP delivery service (Twilio, SendGrid, AWS SNS)
 3. **Step 6**: Implement password hashing (bcrypt, argon2)
-4. **Step 7**: Add frontend login UI
-5. **Step 8**: Security testing & penetration testing
+4. **Step 7**: Security testing & penetration testing
+5. **Step 8**: GDPR and compliance implementation
 6. **Step 9**: Deploy to production
 7. **Step 10**: Monitor & maintain
 

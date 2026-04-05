@@ -139,6 +139,15 @@ A **production-ready, enterprise-grade** OTP (One-Time Password) authentication 
      - API smoke test commands
    - **Status**: ✅ Step 7 support document
 
+### Additional Support File: **06_Compliance_Privacy.md**
+   - **What it does**: GDPR and compliance maintenance guide
+   - **Contents**:
+     - Data export workflow
+     - Data erasure workflow
+     - Retention maintenance queries
+     - Operational control checklist
+   - **Status**: ✅ Step 8 support document
+
 ---
 
 ## 🎯 Key Features - The 3 Steps Explained

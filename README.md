@@ -394,7 +394,7 @@ WHERE PolicyName = 'DEFAULT';
 - Step 5: SMS/Email OTP delivery service integration
 - Step 6: Web API endpoints for registration and login
 - Step 7: Security testing and penetration testing (see `05_Security_Testing.md`)
-- Step 8: GDPR and compliance implementation
+- Step 8: GDPR and compliance implementation (see `06_Compliance_Privacy.md`)
 
 ---
 
