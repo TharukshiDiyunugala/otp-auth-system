@@ -130,6 +130,15 @@ A **production-ready, enterprise-grade** OTP (One-Time Password) authentication 
      - Deployment roadmap
    - **Status**: ✅ Reference document
 
+### Additional Support File: **05_Security_Testing.md**
+   - **What it does**: Security validation and penetration testing guide
+   - **Contents**:
+     - Lockout verification checks
+     - OTP expiration and reuse checks
+     - Suspicious activity detection tests
+     - API smoke test commands
+   - **Status**: ✅ Step 7 support document
+
 ---
 
 ## 🎯 Key Features - The 3 Steps Explained

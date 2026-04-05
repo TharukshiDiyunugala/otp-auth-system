@@ -393,7 +393,7 @@ WHERE PolicyName = 'DEFAULT';
 - Step 4: Application-level integration code (Python, Node.js, C#, etc.)
 - Step 5: SMS/Email OTP delivery service integration
 - Step 6: Web API endpoints for registration and login
-- Step 7: Security testing and penetration testing
+- Step 7: Security testing and penetration testing (see `05_Security_Testing.md`)
 - Step 8: GDPR and compliance implementation
 
 ---
