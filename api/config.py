@@ -10,6 +10,7 @@ class Settings:
     API_HOST = os.getenv("API_HOST", "0.0.0.0")
     API_PORT = int(os.getenv("API_PORT", "8000"))
     DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+    MAX_REQUEST_SIZE_BYTES = int(os.getenv("MAX_REQUEST_SIZE_BYTES", "16384"))
     OTP_DELIVERY_PROVIDER = os.getenv("OTP_DELIVERY_PROVIDER", "console").lower()
     OTP_INCLUDE_IN_RESPONSE = os.getenv("OTP_INCLUDE_IN_RESPONSE", "true").lower() == "true"
 

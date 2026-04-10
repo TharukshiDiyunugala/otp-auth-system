@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from werkzeug.exceptions import HTTPException
 
 import db
 from config import Settings
@@ -6,6 +7,48 @@ from otp_delivery import DeliveryError, get_delivery_service
 from password_utils import hash_password, verify_password
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = Settings.MAX_REQUEST_SIZE_BYTES
+
+
+def _parse_int_field(payload, field_name):
+    value = payload.get(field_name)
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+@app.before_request
+def ensure_json_for_write_endpoints():
+    if request.method in {"POST", "PUT", "PATCH"} and not request.is_json:
+        return jsonify({"error": "Content-Type must be application/json"}), 415
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.errorhandler(413)
+def request_entity_too_large(_exc):
+    return jsonify({"error": "Request payload too large"}), 413
+
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(exc):
+    return jsonify({"error": exc.description}), exc.code
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_exception(_exc):
+    return jsonify({"error": "Internal server error"}), 500
 
 
 @app.get("/health")
@@ -37,10 +80,10 @@ def register_user():
 @app.post("/api/otp/generate")
 def generate_otp():
     payload = request.get_json(silent=True) or {}
-    user_id = payload.get("user_id")
+    user_id = _parse_int_field(payload, "user_id")
     purpose = payload.get("purpose", "LOGIN")
 
-    if not user_id:
+    if user_id is None:
         return jsonify({"error": "Missing required field: user_id"}), 400
 
     try:
@@ -75,11 +118,11 @@ def generate_otp():
 @app.post("/api/otp/verify")
 def verify_otp():
     payload = request.get_json(silent=True) or {}
-    user_id = payload.get("user_id")
+    user_id = _parse_int_field(payload, "user_id")
     otp_code = payload.get("otp_code")
     purpose = payload.get("purpose", "LOGIN")
 
-    if not user_id or not otp_code:
+    if user_id is None or not otp_code:
         return jsonify({"error": "Missing required fields: user_id, otp_code"}), 400
 
     try:
@@ -92,13 +135,16 @@ def verify_otp():
 @app.post("/api/login-attempt")
 def record_login_attempt():
     payload = request.get_json(silent=True) or {}
-    user_id = payload.get("user_id")
+    user_id = _parse_int_field(payload, "user_id")
     status = payload.get("status")
     error_message = payload.get("error_message")
     ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
 
     if not status:
         return jsonify({"error": "Missing required field: status"}), 400
+
+    if payload.get("user_id") is not None and user_id is None:
+        return jsonify({"error": "Invalid field type: user_id must be an integer"}), 400
 
     try:
         result = db.sp_record_login_attempt(user_id, ip_address, status, error_message)

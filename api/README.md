@@ -50,3 +50,14 @@ Environment variables:
 
 - Registration now expects plaintext `password` and hashes it with `bcrypt` before calling `sp_RegisterUser`.
 - Login password checks use `POST /api/login/password-verify` with `login_id` (username or email) and `password`.
+
+## API Hardening (Step 9)
+
+- API write endpoints enforce `Content-Type: application/json`.
+- Request payload size is limited with `MAX_REQUEST_SIZE_BYTES` (default `16384`).
+- Security headers are added on responses:
+	- `X-Content-Type-Options: nosniff`
+	- `X-Frame-Options: DENY`
+	- `Referrer-Policy: no-referrer`
+	- `Cache-Control: no-store` for `/api/*` routes
+- Unexpected server exceptions are sanitized to a generic `500` response.
