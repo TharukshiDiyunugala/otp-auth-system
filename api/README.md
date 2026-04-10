@@ -61,3 +61,21 @@ Environment variables:
 	- `Referrer-Policy: no-referrer`
 	- `Cache-Control: no-store` for `/api/*` routes
 - Unexpected server exceptions are sanitized to a generic `500` response.
+
+## Automated API Tests (Step 10)
+
+- Added test suite at `api/tests/test_app.py` using `unittest` and `unittest.mock`.
+- Coverage includes:
+	- health endpoint response and security headers
+	- JSON content-type enforcement on write endpoints
+	- input validation for `user_id`
+	- OTP generation success path with mocked DB and delivery dependencies
+	- generic 500 error sanitization for unexpected exceptions
+	- request size limit enforcement (`413`)
+
+Run tests:
+
+```bash
+cd api
+python -m unittest discover -s tests -p "test_*.py"
+```
